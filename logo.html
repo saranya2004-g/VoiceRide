@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VoiceRide</title>
+    <link rel="manifest" href="./manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #000428, #004e92);
+            overflow: hidden;
+            cursor: pointer; /* Shows user they can tap */
+        }
+
+        .logo-container {
+            text-align: center;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .logo-container img {
+            width: 180px;
+            animation: scaleUp 2s ease-in-out infinite alternate;
+        }
+         h1{
+            color:white;
+         }
+        .welcome-text {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 15px;
+            font-family: Arial, sans-serif;
+            animation: fadeIn 3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+    
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="icon-192x192.png" alt="VoiceRide Logo">
+        <h1>Welcome to VoiceRide</h1>
+    </div>
+
+    <script>
+        // 1. SPEECH FUNCTION (keep this exactly)
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => callback && callback();
+            window.speechSynthesis.speak(speech);
+        }
+    
+        // 2. VOICE COMMAND CORE (new fixed version)
+        document.body.addEventListener('click', () => {
+            if (!window.speechSynthesis.speaking) {
+                speak("Welcome to voiceride . Say 'verify accounct' ", () => {
+                    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    recognition.lang = 'en-US';
+                    
+                    recognition.onresult = (e) => {
+                        const command = e.results[0][0].transcript.toLowerCase();
+                        console.log("Heard:", command);  // Debug line
+                        
+                        if (command.includes('verify account')) {
+                            speak("Opening verify account...", () => {
+                                window.location.href = 'dob.html';
+                            });
+                        }
+                        //else if (command.includes('emergency')) {
+                            //speak("Emergency mode!", () => {
+                               // window.location.href = 'emergency.html';
+                           // });
+                        //}
+                        else {
+                            speak("Try saying: book ride or emergency");
+                        }
+                    };
+    
+                    recognition.onerror = (e) => {
+                        console.error("Error:", e.error);
+                        speak("Voice system error. Please tap again.");
+                    };
+    
+                    recognition.start();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

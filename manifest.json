@@ -1,0 +1,77 @@
+{
+  "name": "VoiceRide",
+  "short_name": "VoiceRide",
+  "start_url": "/logo.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#600000",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    
+    {
+    "src": "/vr-192x192.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  },
+  {
+    "src":"/user-192x192.jpg",
+    "sizes": "192x192",
+    "type": "image/jpg"
+  },
+  {
+    "src": "/user-512x512.png",
+    "sizes":"512x512",
+    "type": "image/png"
+  },
+  {
+    "src":"/password-192x192.jpg",
+    "sizes": "192x192",
+    "type": "image/jpg"
+  },
+  {
+    "src":"/password-512x512.jpg",
+    "sizes": "512x512",
+    "type": "image/jpg"
+  },
+  {
+    "src":"/taxi-192x192.jpg",
+    "sizes": "192x192",
+    "type": "image/jpg"
+  },
+  {
+    "src":"/auto-192x192.jpg",
+    "sizes": "192x192",
+    "type": "image/jpg"
+  },
+  {
+    "src":"bike-192x192.jpg",
+    "sizes": "192x192",
+    "type": "image/jpg"
+  }
+
+  ],
+  "screenshots": [
+    {
+    "src": "/screenshot-desktop.png",  
+    "sizes": "1280x720",
+    "type": "image/png",
+    "form_factor": "wide"  
+    },
+  {
+    "src": "/screenshot-mobile.png",  
+    "sizes": "750x1334",
+    "type": "image/png"    
+  }
+]
+  
+  
+}

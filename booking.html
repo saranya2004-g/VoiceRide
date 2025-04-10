@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+<!-- For iOS support -->
+
+    <meta name="theme-color" content="#600000">
+    <title>Book a Ride</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: white; margin-top: 30px; }
+        .container { width: 90%; max-width: 400px; margin: auto; }
+        h2 { color: #1500c3; }
+        .ride-option { display: flex; align-items: center; margin: 15px; cursor: pointer; }
+        .ride-option img { width: 60px; margin-right: 10px; }
+        .book-button { background: #1500c3; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>BOOK A RIDE</h2>
+        
+        <div class="ride-option" id="car" onclick="handleRideSelection('Car')">
+            <img src="taxi-192x192.jpg" alt="Car">
+            <p>Car</p>
+        </div>
+        <div class="ride-option" id="auto" onclick="handleRideSelection('Auto')">
+            <img src="auto-192x192.jpg" alt="Auto">
+            <p>Auto</p>
+        </div>
+        <div class="ride-option" id="bike" onclick="handleRideSelection('Bike')">
+            <img src="bike-192x192.jpg" alt="Bike">
+            <p>Bike</p>
+        </div>
+
+        <button class="book-button" onclick="startListening()">Book a Ride</button>
+    </div>
+    <p>Say "Emergency On" for emergency, or "Don't Need" to continue.</p>
+
+    <script>
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = "en-US";
+        recognition.continuous = true;
+        recognition.interimResults = false;
+
+        let isListening = false;
+        let selectedRide = ""; // Store user's selected ride
+
+        // Text-to-Speech Function
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => { 
+                if (callback) callback();
+                if (!isListening) {
+                    recognition.start(); // Start listening after speech
+                    isListening = true;
+                }
+            };
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Handle Ride Selection & Ask for Emergency Option
+        function handleRideSelection(ride) {
+            selectedRide = ride;
+            speak(`You selected ${ride}. If you need emergency, say 'Emergency On'. Otherwise, say 'Don't Need'., startListening`);
+        }
+
+        // Start Listening for User Input
+        function startListening() {
+            if (!isListening) {
+                recognition.start();
+                isListening = true;
+            }
+        }
+
+        recognition.onresult = (event) => {
+            const spokenText = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+            console.log("User said:", spokenText);
+
+            if (!selectedRide) {
+                // Ride Selection Step
+                if (spokenText.includes("car")) {
+                    handleRideSelection("Car");
+                } else if (spokenText.includes("auto")) {
+                    handleRideSelection("Auto");
+                } else if (spokenText.includes("bike")) {
+                    handleRideSelection("Bike");
+                } else {
+                    speak("I didn't understand. Please say Car, Auto, or Bike.");
+                }
+            } else {
+                // Emergency Option Step
+                if (spokenText.includes("emergency on")) {
+                    speak("Redirecting to the emergency page.", () => {
+                        window.location.href = "emergency.html";
+                    });
+                } else if (spokenText.includes("don't need")) {
+                    speak("Your ride has been booked. Redirecting to destination page.", () => {
+                        setTimeout(() => {
+                            window.location.href = "destination.html";
+                        }, 2000);
+                    });
+                } else {
+                    speak("Please say 'Emergency On' or 'Don't Need'.");
+                }
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech recognition error:", event.error);
+            speak("I couldn't hear you. Please try again.");
+        };
+
+        // Speak Ride Options & Start Listening When User Clicks Anywhere
+        document.body.addEventListener("click", () => {
+            if (!isListening) {
+                speak("Choose a mode of ride. Tap or say Car, Auto, or Bike.");
+            }
+        }, { once: true });
+    </script>
+
+</body>
+</html>

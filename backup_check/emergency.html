@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+<!-- For iOS support -->
+
+    <meta name="theme-color" content="#600000">
+    <title>Emergency SOS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: white;
+            margin-top: 50px;
+        }
+        .container {
+            width: 90%;
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f1f1f1;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #1500c3;
+        }
+        .sos-button {
+            background:#1500c3;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Emergency SOS</h2>
+        <p>Tap anywhere and say "Help me" to send your location.</p>
+        <button class="sos-button" onclick="startListening()">Activate Voice Assistant</button>
+    </div>
+
+    <script>
+        // Function to Speak
+        function speak(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Function to Start Voice Recognition
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US";
+
+            recognition.onstart = function () {
+                speak("Listening... Say 'Help me' if you need assistance.");
+            };
+
+            recognition.onresult = function (event) {
+                let voiceInput = event.results[0][0].transcript.toLowerCase();
+                if (voiceInput.includes("help me")) {
+                    getLocation();
+                } else {
+                    speak("I didn't understand. Please say 'Help me' if you need emergency assistance.");
+                }
+            };
+
+            recognition.start();
+        }
+
+        // Function to Get User Location
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(sendSOS, handleError);
+            } else {
+                speak("Geolocation is not supported on your device.");
+            }
+        }
+
+        // Function to Send SOS Message with Location
+        function sendSOS(position) {
+            let latitude = position.coords.latitude;
+            let longitude = position.coords.longitude;
+            let locationURL = https//www.google.com/maps?q=${latitude},${longitude};
+
+            let emergencyMessage =  `EMERGENCY SOS \nI need help! My current location is:\n${locationURL}`;
+            
+            // Alert Message
+            alert("SOS Triggered! Sharing your location...");
+            speak("SOS activated. Sending your location now.");
+
+            // Send via WhatsApp (User must manually send)
+            let whatsappLink = https//api.whatsapp.com/send?text=${encodeURIComponent(emergencyMessage)};
+            window.open(whatsappLink, "_blank");
+        }
+
+        // Function to Handle Errors
+        function handleError(error) {
+            speak("Unable to fetch location. Please check your location settings.");
+        }
+
+        // Start Listening on Click
+        document.body.addEventListener("click", startListening);
+    </script>
+
+</body>
+</html>

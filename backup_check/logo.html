@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VoiceRide</title>
+    <link rel="manifest" href="./manifest.json">
+    <style>
+        body { 
+            font-family: Arial; 
+            text-align: center;
+            padding: 20px;
+        }
+        .logo-container img {
+            height: 150px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="./VR.png" alt="VoiceRide Logo">
+        <h1>Welcome to VoiceRide</h1>
+    </div>
+
+    <script>
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => { 
+                if (callback) callback(); 
+            };
+            window.speechSynthesis.speak(speech);
+        }
+
+        document.body.addEventListener("click", () => {
+            speak("Welcome to Voice Ride. Say 'book ride' to continue.");
+        }, { once: true });
+    </script>
+</body>
+</html>

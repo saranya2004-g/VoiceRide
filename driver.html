@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+    <!-- For iOS support -->
+    
+    <meta name="theme-color" content="#600000">
+    <title>Driver Profile</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: white; margin-top: 30px; }
+        .container { width: 90%; max-width: 400px; margin: auto; padding: 20px; border-radius: 10px; background: #f1f1f1; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        img { width: 120px; height: 120px; border-radius: 50%; margin: 10px 0; }
+        h2 { color: #1500c3; }
+        p { font-size: 18px; margin: 5px 0; }
+        .details { font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Your Driver</h2>
+        <img src="D:\College\voice ride\Final VoiceRide\driver.jpg" alt="Driver Photo" id="driverPhoto">
+        <p><strong>Name:</strong> <span class="details" id="driverName">Rahul Kumar</span></p>
+        <p><strong>Mobile:</strong> <span class="details" id="driverMobile">+91 9876543210</span></p>
+        <p><strong>Vehicle:</strong> <span class="details" id="vehicleDetails">White Swift, TN 05 AB 6789</span></p>
+        <p><strong>Arrival Time:</strong> <span class="details" id="arrivalTime">5 minutes</span></p>
+    </div>
+    <p>Say "Emergency On" for emergency, or "Don't Need" to continue.</p>
+    <script>
+        let recognition;
+
+        // Function to Speak Text
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => { if (callback) callback(); };
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Function to Announce Driver Details
+        function announceDriverDetails() {
+            const driverName = document.getElementById("driverName").innerText;
+            const driverMobile = document.getElementById("driverMobile").innerText;
+            const vehicleDetails = document.getElementById("vehicleDetails").innerText;
+            const arrivalTime = document.getElementById("arrivalTime").innerText;
+            
+            const message = `Your driver is ${driverName}. Mobile number is ${driverMobile}. 
+                            He is driving a ${vehicleDetails}. Estimated arrival time is ${arrivalTime}. 
+                            If you need emergency, say 'Emergency On'. Otherwise, say 'Don't Need'.`;
+
+            speak(message, startListening);
+        }
+
+        // Function to Start Listening for User Response
+        function startListening() {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US";
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                let command = event.results[0][0].transcript.toLowerCase().trim();
+                console.log("User said:", command);
+
+                if (command.includes("emergency on")) {
+                    speak("Redirecting to emergency page.", () => {
+                        window.location.href = "emergency.html";
+                    });
+                } else if (command.includes("don't need")) {
+                    speak("Redirecting to feedback page.", () => {
+                        window.location.href = "feedback.html";
+                    });
+                } else {
+                    speak("I didn't understand. Please say 'Emergency On' or 'Don't Need'.", startListening);
+                }
+            };
+
+            recognition.onerror = function() {
+                speak("I couldn't hear you. Please try again.", startListening);
+            };
+        }
+
+        // Start voice assistant on first user interaction
+        document.body.addEventListener("click", function() {
+            announceDriverDetails();
+        }, { once: true });
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+<!-- For iOS support -->
+
+    <meta name="theme-color" content="#600000">
+    <title>Voice Ride - Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: white; }
+        .container { width: 90%; max-width: 400px; margin: auto; }
+        .logo { width: 100px; margin-bottom: 10px; }
+        .card { background: #1500c3; padding: 20px; border-radius: 10px; color: white; }
+        .input-group { display: flex; align-items: center; background: white; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .input-group img { width: 20px; margin-right: 10px; }
+        input { border: none; font-size: 16px; flex: 1; outline: none; }
+        button { width: 100%; padding: 10px; font-size: 18px; background: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="D:\College\voice ride\Final VoiceRide\VR.png" class="logo" alt="Voice Ride Logo">
+        <h2>VoiceRide 🎤</h2>
+
+        <div class="card">
+            <h3>Sign In</h3>
+            <div class="input-group">
+                <img src="D:\College\voice ride\Final VoiceRide\user img" alt="User">
+                <input type="text" id="username" placeholder="USERNAME" readonly>
+            </div>
+            <div class="input-group">
+                <img src="D:\College\voice ride\Final VoiceRide\password logo.jpg" alt="Lock">
+                <input type="password" id="password" placeholder="PASSWORD" readonly>
+            </div>
+            <button id="login-button">LOGIN</button>
+        </div>
+    </div>
+
+    
+    <p>Say "Emergency On" for emergency, or "Don't Need" to continue.</p>
+
+    <script>
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = "en-US";
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        let step = 0;
+
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => { if (callback) callback(); };
+            window.speechSynthesis.speak(speech);
+        }
+
+        function startListening() {
+            recognition.start();
+        }
+
+        recognition.onresult = (event) => {
+            const spokenText = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+            console.log("User said:", spokenText);
+
+            if (step === 0) { 
+                document.getElementById("username").value = spokenText; 
+                step++;
+                speak("Now, say your password.", startListening);
+            } 
+            else if (step === 1) { 
+                document.getElementById("password").value = "*".repeat(spokenText.length);
+                step++;
+                speak("Say 'Login' to continue.", startListening);
+            } 
+            else if (step === 2 && spokenText.includes("login")) {
+                speak("Before logging in, if you need emergency, say 'Emergency On'. Otherwise, say 'Don't Need'.", startListening);
+                step++;
+            }
+            else if (step === 3) { 
+                if (spokenText.includes("emergency on")) {
+                    speak("Redirecting to the emergency page.", () => {
+                        window.location.href = "emergency.html";
+                    });
+                } else if (spokenText.includes("don't need")) {
+                    speak("Logging in... Redirecting to booking page.", () => {
+                        setTimeout(() => {
+                            localStorage.setItem("isLoggedIn", "true"); 
+                            window.location.href = "booking.html"; 
+                        }, 2000);
+                    });
+                }
+            }
+        };
+
+        recognition.onend = () => setTimeout(() => recognition.start(), 500);
+
+        recognition.onerror = (event) => console.error("Speech recognition error:", event.error);
+
+        document.body.addEventListener("click", () => {
+            speak("Welcome to Voice Ride. Please say your username.", startListening);
+        }, { once: true });
+
+    </script>
+
+</body>
+</html>

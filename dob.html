@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+<!-- For iOS support -->
+
+    <meta name="theme-color" content="#600000">
+    <title>Secure Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: white;
+            margin-top: 50px;
+        }
+        .container {
+            width: 90%;
+            max-width: 400px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f1f1f1;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #1500c3;
+        }
+        input {
+            width: 90%;
+            max-width: 300px;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #1500c3;
+            text-align: center;
+            font-size: 18px;
+        }
+        .login-button {
+            background: #1500c3;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Secure Login</h2>
+        <p id="instructions">Tap anywhere and say your Date of Birth.</p>
+        <input type="text" id="dobInput" placeholder="Your Date of Birth will appear here" readonly>
+        <button class="login-button" onclick="startVoiceRecognition()">Tap to Speak</button>
+    </div>
+
+    <script>
+        let recognition;
+        if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US";
+            recognition.interimResults = false;
+        } else {
+            alert("Your browser does not support speech recognition.");
+        }
+
+        // Voice assistant function
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => { if (callback) callback(); };
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Start speech recognition
+        function startVoiceRecognition() {
+            if (!recognition) return;
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                let spokenDOB = event.results[0][0].transcript.trim();
+                document.getElementById("dobInput").value = spokenDOB;
+                processDOB(spokenDOB);
+            };
+
+            recognition.onerror = function() {
+                speak("Sorry, I couldn't understand. Please try again.");
+            };
+        }
+
+        // Check if DOB is already stored
+        window.onload = function() {
+            if (!localStorage.getItem("userDOB")) {
+                speak("Welcome! Please tap anywhere and say your date of birth.");
+            } else {
+                speak("Welcome back! Please tap anywhere and say your date of birth to log in.");
+            }
+        };
+
+        // Process the spoken DOB
+        function processDOB(spokenDOB) {
+            let storedDOB = localStorage.getItem("userDOB");
+
+            if (!storedDOB) {
+                // First-time user: Store DOB (No verification)
+                localStorage.setItem("userDOB", spokenDOB);
+                speak("Your date of birth has been saved. Logging you in now.");
+                setTimeout(() => {
+                    window.location.href = "login.html"; // Redirect to login page
+                }, 2000);
+            } else {
+                // Returning user: Verify DOB
+                if (spokenDOB.toLowerCase() === storedDOB.toLowerCase()) {
+                    speak("Date of birth verified. Logging in now.");
+                    setTimeout(() => {
+                        window.location.href = "login.html"; // Redirect to login page
+                    }, 2000);
+                } else {
+                    speak("Your date of birth is incorrect. Please try again.");
+                }
+            }
+        }
+
+        // Start voice recognition when user clicks anywhere
+        document.body.addEventListener("click", startVoiceRecognition);
+    </script>
+
+</body>
+</html>

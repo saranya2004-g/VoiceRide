@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+<!-- For iOS support -->
+
+    <meta name="theme-color" content="#600000">
+    <title>Feedback Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: white; margin-top: 30px; }
+        .container { width: 90%; max-width: 400px; margin: auto; padding: 20px; border-radius: 10px; background: #f1f1f1; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        h2 { color: #1500c3; }
+        .feedback-options { margin: 15px 0; display: flex; flex-direction: column; gap: 10px; }
+        .feedback-button { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #1500c3; background: white; cursor: pointer; }
+        .submit-button { background: #1500c3; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Post-Ride Experience</h2>
+
+        <p><strong>How was our driver service?</strong></p>
+
+        <!-- Feedback Options -->
+        <div class="feedback-options">
+            <button class="feedback-button" onclick="selectFeedback('Good')">Good</button>
+            <button class="feedback-button" onclick="selectFeedback('Bad')">Bad</button>
+            <button class="feedback-button" onclick="selectFeedback('Excellent')">Excellent</button>
+        </div>
+
+        <!-- Submit Button -->
+        <button class="submit-button" onclick="submitFeedback()">Submit My Feedback</button>
+
+        <p id="statusMessage"></p>
+    </div>
+
+    <script>
+        let selectedFeedback = "";
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = "en-US";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        // Voice Assistant Function
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => { if (callback) callback(); };
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Start Voice Recognition
+        function startListening() {
+            recognition.start();
+        }
+
+        recognition.onresult = (event) => {
+            const spokenText = event.results[0][0].transcript.toLowerCase().trim();
+            console.log("User said:", spokenText);
+
+            if (["good", "bad", "excellent"].includes(spokenText)) {
+                selectFeedback(spokenText.charAt(0).toUpperCase() + spokenText.slice(1)); // Capitalize first letter
+            } else if (spokenText === "submit") {
+                submitFeedback();
+            } else {
+                speak("Please say Good, Bad, or Excellent.");
+            }
+        };
+
+        recognition.onerror = () => {
+            speak("I couldn't hear you. Please try again.");
+        };
+
+        // Handle Feedback Selection
+        function selectFeedback(feedback) {
+            selectedFeedback = feedback;
+            speak(`You selected ${feedback}. Say 'Submit' to submit your feedback.`, startListening);
+            document.querySelector(".submit-button").style.display = "block";
+        }
+
+        // Handle Feedback Submission
+        function submitFeedback() {
+            if (!selectedFeedback) {
+                speak("Please select your feedback first.");
+                return;
+            }
+            let message = `Thank you! Your feedback '${selectedFeedback}' has been recorded.`;
+            document.getElementById("statusMessage").innerText = message;
+            speak(message);
+        }
+
+        // Start Voice Assistant on Click
+        document.body.addEventListener("click", () => {
+            speak("How was your experience? Say 'Good', 'Bad', or 'Excellent'.", startListening);
+        }, { once: true });
+
+    </script>
+
+</body>
+</html>

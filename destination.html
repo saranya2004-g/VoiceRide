@@ -1,0 +1,100 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+<!-- For iOS support -->
+
+    <meta name="theme-color" content="#600000">
+    <title>Enter Destination</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: white; margin-top: 30px; }
+        .container { width: 90%; max-width: 400px; margin: auto; }
+        h2 { color: #1500c3; }
+        input { width: 80%; padding: 10px; margin: 10px; font-size: 16px; }
+        .confirm-button { background: #1500c3; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Enter Your Destination</h2>
+        <input type="text" id="destinationInput" placeholder="Speak your destination" readonly>
+        <button class="confirm-button" onclick="startListening()">Confirm Ride</button>
+    </div>
+    <p>Say "Emergency On" for emergency, or "Don't Need" to continue.</p>
+    <script>
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = "en-US";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        let step = 0; // To track the conversation flow
+        let userDestination = ""; // Store the user's spoken destination
+
+        // Text-to-Speech Function
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => { if (callback) callback(); };
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Start Listening for Voice Input
+        function startListening() {
+            recognition.start();
+        }
+
+        // Handle Speech Input
+        recognition.onresult = (event) => {
+            const spokenText = event.results[0][0].transcript.toLowerCase().trim();
+            console.log("User said:", spokenText);
+
+            if (step === 0) {
+                // Step 1: Capture Destination
+                userDestination = spokenText;
+                document.getElementById("destinationInput").value = userDestination;
+                step = 1;
+                speak(`You have chosen ${userDestination}. If you need emergency, say 'Emergency On'. Otherwise, say 'Don't Need'., startListening`);
+            } else if (step === 1) {
+                // Step 2: Handle Emergency Response
+                if (spokenText.includes("emergency on")) {
+                    speak("Redirecting to the emergency page.", () => {
+                        window.location.href = "emergency.html";
+                    });
+                } else if (spokenText.includes("don't need")) {
+                    speak("Your ride is booked. Now proceeding to the payment page.", redirectToPayment);
+                } else {
+                    speak("Please say 'Emergency On' or 'Don't Need'.", startListening);
+                }
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech recognition error:", event.error);
+            speak("I couldn't hear you. Please try again.", startListening);
+        };
+
+        // Redirect to Payment Page
+        function redirectToPayment() {
+            setTimeout(() => {
+                speak("Redirecting to payment page.");
+                window.location.href = "payment.html";
+            }, 1000);
+        }
+
+        // Start voice assistant when page loads
+        window.onload = function () {
+            speak("Where do you want to go?", startListening);
+        };
+
+        // Start listening when user clicks anywhere on the page
+        document.body.addEventListener("click", function () {
+            speak("Where do you want to go?", startListening);
+        }, { once: true });
+
+    </script>
+
+</body>
+</html>

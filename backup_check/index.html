@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+<!-- For iOS support -->
+
+    <meta name="theme-color" content="#600000">
+    <title>VR Ride - Welcome</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #000428, #004e92);
+            overflow: hidden;
+            cursor: pointer; /* Shows user they can tap */
+        }
+
+        .logo-container {
+            text-align: center;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .logo-container img {
+            width: 180px;
+            animation: scaleUp 2s ease-in-out infinite alternate;
+        }
+
+        .welcome-text {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 15px;
+            font-family: Arial, sans-serif;
+            animation: fadeIn 3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container">
+        <img src="VR.png" alt="VR Ride Logo">
+        <div class="welcome-text">Welcome to VoiceRide</div>
+    </div>
+
+    <script>
+        // Voice System 2.0 - Professional Grade
+        (function() {
+            // 1. Configuration
+            const settings = {
+                speechRate: 1.1,
+                emergencyRate: 1.6,
+                pitch: 1.05,
+                timeout: 3000
+            };
+        
+            // 2. Enhanced Speech Engine
+            const speak = (text, callback, isUrgent = false) => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = "en-US";
+                utterance.rate = isUrgent ? settings.emergencyRate : settings.speechRate;
+                utterance.pitch = settings.pitch;
+                utterance.onend = () => callback && setTimeout(callback, 200);
+                window.speechSynthesis.speak(utterance);
+            };
+        
+            // 3. Navigation Controller
+            const navigateTo = (page, prompt) => {
+                speak(prompt || `Taking you to ${page.replace('dob.html','')}`, 
+                    () => window.location.href = page
+                );
+            };
+        
+            // 4. Voice Command Registry
+            const commands = {
+                'verify': () => navigateTo("dob.html", "Account verification"),
+                'book': () => navigateTo("booking.html", "Ride booking"),
+                // TEMPORARY DEBUG CODE (add to logo.html)
+'book ride': () => {
+    speak("Debugging...", () => {
+        console.log("Trying to access booking.html");
+        fetch('booking.html')
+            .then(r => {
+                console.log("HTTP status:", r.status); 
+                window.location.href = 'booking.html';
+            })
+            .catch(e => {
+                console.error("Fetch failed:", e);
+                speak("Error! Check console logs.");
+            });
+    });
+},
+                //'book ride': () => {
+   // speak("Opening booking page...", () => {
+        // Simple direct navigation - works 100% if file exists
+      //  window.location.href = 'booking.html'; 
+   // });
+ //},
+                'destination': () => navigateTo("destination.html"),
+                
+                'emergency on': () => {
+                    speak("Emergency protocol activated!", 
+                        () => navigateTo("emergency.html"), 
+                        true
+                    ); 
+                },
+               
+                // In your voiceCommands object (logo.html):
+
+            
+            
+                   'help': () => speak("Try saying: book ride, verify account, or emergency help")
+            };
+       
+
+            // 5. Voice Recognition Core
+            const startListening = () => {
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'en-US';
+                recognition.maxAlternatives = 3;
+        
+                recognition.onresult = (e) => {
+                    const transcripts = Array.from(e.results[0])
+                        .map(alt => alt.transcript.toLowerCase());
+                        
+                    for (const transcript of transcripts) {
+                        for (const [keyword, action] of Object.entries(commands)) {
+                            if (transcript.includes(keyword)) {
+                                return action();
+                            }
+                        }
+                    }
+                    speak("Command not recognized. Please try again.");
+                };
+        
+                recognition.onerror = (e) => {
+                    console.error("Recognition error:", e.error);
+                    speak("Voice system error. Please tap to retry.");
+                };
+        
+                recognition.start();
+            };
+        
+            // 6. User Interaction
+            document.body.addEventListener('click', () => {
+                if (!window.speechSynthesis.speaking) {
+                    speak("Welcome to voiceride,please say book ride, verify account, or emergency help ", startListening);
+                }
+            }, { once: true });
+            
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+
+        })();
+        </script>
+
+</body>
+</html>

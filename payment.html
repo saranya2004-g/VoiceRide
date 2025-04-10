@@ -1,0 +1,144 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">  <!-- Leading slash is critical -->
+<!-- For iOS support -->
+
+    <meta name="theme-color" content="#600000">
+    <title>Payment Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: white; margin-top: 30px; }
+        .container { width: 90%; max-width: 400px; margin: auto; }
+        h2 { color: #1500c3; }
+        .fare-box { margin: 20px 0; font-size: 18px; text-align: left; padding: 10px; background: #f1f1f1; border-radius: 10px; }
+        .payment-option { margin: 10px; cursor: pointer; font-size: 18px; padding: 10px; border-radius: 5px; border: 1px solid #1500c3; }
+        .confirm-button { background: #1500c3; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 18px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>FARE SUMMARY</h2>
+        <div class="fare-box">
+            <p>Total Fare = <span id="totalFare">0</span> ₹</p>
+            <p>Base Fare = <span id="baseFare">0</span> ₹</p>
+            <p>Tax = <span id="tax">18</span>%</p>
+        </div>
+
+        <p><strong>Choose a Payment Method:</strong></p>
+        <button class="payment-option" id="online">Online Payment</button>
+        <button class="payment-option" id="offline">Offline Payment</button>
+
+        <div id="onlineOptions" style="display:none;">
+            <p><strong>Select a service:</strong></p>
+            <button class="payment-option" id="gpay">Google Pay</button>
+            <button class="payment-option" id="phonepe">PhonePe</button>
+            <button class="payment-option" id="paytm">Paytm</button>
+        </div>
+
+        <button class="confirm-button" id="confirmPayment">Confirm Payment</button>
+
+        <p id="statusMessage"></p>
+    </div>
+    <p>Say "Emergency On" for emergency, or "Don't Need" to continue.</p>
+
+    <script>
+        let distance = 10; // Example distance (in km)
+        let baseFare = distance * 10; // ₹10 per km
+        let tax = 18; // 18% tax
+        let totalFare = baseFare + (baseFare * tax / 100);
+
+        document.getElementById("baseFare").innerText = baseFare;
+        document.getElementById("totalFare").innerText = totalFare;
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = "en-US";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        let step = 0; // Track the conversation flow
+        let selectedPaymentMethod = ""; // Store payment method
+
+        // Text-to-Speech Function
+        function speak(text, callback) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.onend = () => { if (callback) callback(); };
+            window.speechSynthesis.speak(speech);
+        }
+
+        function startListening() {
+            recognition.start();
+        }
+
+        function confirmPayment(paymentMethod) {
+            selectedPaymentMethod = paymentMethod;
+            step = 1;
+            speak(`Payment method selected: ${paymentMethod}. If you need emergency, say 'Emergency On'. Otherwise, say 'Don't Need'., startListening`);
+        }
+
+        recognition.onresult = (event) => {
+            const spokenText = event.results[0][0].transcript.toLowerCase().trim();
+            console.log("User said:", spokenText);
+
+            if (step === 0) {
+                // Step 1: Choosing Payment Method
+                if (spokenText.includes("online")) {
+                    selectOnlinePayment();
+                } else if (spokenText.includes("offline")) {
+                    confirmPayment("Offline Payment");
+                } else if (spokenText.includes("google pay")) {
+                    confirmPayment("Google Pay");
+                } else if (spokenText.includes("phonepe")) {
+                    confirmPayment("PhonePe");
+                } else if (spokenText.includes("paytm")) {
+                    confirmPayment("Paytm");
+                } else {
+                    speak("I didn't understand. Please say online payment or offline payment.", startListening);
+                }
+            } else if (step === 1) {
+                // Step 2: Handling Emergency or Proceeding
+                if (spokenText.includes("emergency on")) {
+                    speak("Redirecting to the emergency page.", () => {
+                        window.location.href = "emergency.html";
+                    });
+                } else if (spokenText.includes("don't need")) {
+                    speak(`Payment of ₹${totalFare} confirmed via ${selectedPaymentMethod}. Redirecting to driver details.`, () => {
+                        setTimeout(() => {
+                            window.location.href = "driver.html"; // Redirect to Driver Profile Page
+                        }, 1000);
+                    });
+                } else {
+                    speak("Please say 'Emergency On' or 'Don't Need'.", startListening);
+                }
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech recognition error:", event.error);
+            speak("I couldn't hear you. Please try again.", startListening);
+        };
+
+        function selectOnlinePayment() {
+            document.getElementById("onlineOptions").style.display = "block";
+            speak("You chose online payment. Say Google Pay, PhonePe, or Paytm.", startListening);
+        }
+
+        // Event Listeners for Button Clicks
+        document.getElementById("online").addEventListener("click", selectOnlinePayment);
+        document.getElementById("offline").addEventListener("click", () => confirmPayment("Offline Payment"));
+        document.getElementById("gpay").addEventListener("click", () => confirmPayment("Google Pay"));
+        document.getElementById("phonepe").addEventListener("click", () => confirmPayment("PhonePe"));
+        document.getElementById("paytm").addEventListener("click", () => confirmPayment("Paytm"));
+
+        // Start Voice Assistant on First User Interaction
+        document.body.addEventListener("click", () => {
+            speak(`Your total fare is ₹${totalFare}. Choose a payment method: Online or Offline., startListening`);
+        }, { once: true });
+
+    </script>
+
+</body>
+</html>
